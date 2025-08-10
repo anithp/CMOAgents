@@ -1,0 +1,2005 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        176
+      ],
+      "id": "2cea0562-5242-4256-a6be-432a56fac23d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80",
+          "mode": "list",
+          "cachedResultName": "Content Creation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        896,
+        80
+      ],
+      "id": "b34fec9d-a46a-45a7-90f4-903767b199a1",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kHienqhtZSfAflKw",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keep": "lastItems"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        80
+      ],
+      "id": "fce4f566-86e1-41cb-8a86-eb9c9956c9f3",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "261b9f4f-f0a6-4e68-9c30-0c5304320c2a",
+              "name": "Campaign",
+              "value": "={{ $json.Campaign }}",
+              "type": "string"
+            },
+            {
+              "id": "e2a6bd07-7b49-4a64-b445-fd0bba80d020",
+              "name": "ContentSubject",
+              "value": "={{ $json.ContentSubject }}",
+              "type": "string"
+            },
+            {
+              "id": "7f79b980-9955-47d3-9267-04791e460301",
+              "name": "TargetAudience",
+              "value": "={{ $json.TargetAudience }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1312,
+        80
+      ],
+      "id": "822f8706-9db2-48ca-a813-537f08916f40",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"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\",\n  \"query\": \"{{ $json.ContentSubject.replace(/\"/g, '\\\\\"')}}\",\n  \"search_depth\": \"basic\",\n  \"include_answer\":true,\n  \"topic\":\"news\",\n  \"include_raw_content\":true,\n  \"max_results\": 3\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        80
+      ],
+      "id": "e27e1f3a-42f1-46a5-9732-b25aa88b6daf",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        80
+      ],
+      "id": "160d87c7-5613-4a2b-8627-7d125e947b25",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "title, raw_content",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        80
+      ],
+      "id": "0231e29d-c21c-4380-bccc-49f1bac0c3e0",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Article Content:\n {{ $json.data.toJsonString()}}\n\nTarget Audience:\n{{ $('Get row(s) in sheet').item.json.TargetAudience }}\n\n",
+        "options": {
+          "systemMessage": "#System Role:\nYou are a seasoned LinkedIn content strategist with 10+ years of experience turning articles into high-impact posts that drive views, engagement, and thought leadership.\n\n#Task:\n- Read the provided article content.\n- Create a crisp 50–60 word single-paragraph news summary.\n- Avoid emojis and fluff—keep it concise, engaging, and professional.\n- Add a thoughtful opinion on how this development impacts the future of AI.\n- Write in a casual to semi-formal tone that feels authoritative yet approachable.\n- End with a thought-provoking question to invite discussion and encourage audience participation.\n\nGoal: Produce a post that not only informs but positions the author as a forward-thinking voice in AI, sparking conversation among professionals.\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2256,
+        80
+      ],
+      "id": "ff5299eb-f378-4c32-b855-5662a58d5ae4",
+      "name": "LinkedIn"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        272
+      ],
+      "id": "6996c9a8-7877-42d4-bfc3-59123524899c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Article Content:\n{{ $json.output }}\n\nTarget Audience:\n{{ $('Get row(s) in sheet').item.json.TargetAudience }}\n\n",
+        "options": {
+          "systemMessage": "# System Role\nYou are an expert Twitter content creator with more than 10 years specializing in transforming incoming articles into highly engaging posts tailored to a specific target audience and has scaled veiws for everyone.\n\n# Task Specification\n1) generate summary of news from Article Content and give output in 1 para max, with 1-2 sentences with max 20-30 words.\n2) do not use any emoji\n3) give your opinion about how is this helpful in context of future of AI\n4) use casual language\n5) give your opinion at the end and ask users to engage \n6) the opinions can be mix of both positive and negative views with 60% probability of positive and others of negative\n7) do not output /n or special characters\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2640,
+        80
+      ],
+      "id": "1224f9c5-b6c1-4b0b-ab6d-761d40f327a8",
+      "name": "Twitter"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2640,
+        288
+      ],
+      "id": "ea682756-1406-4db6-8531-4e8150e6d237",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80",
+          "mode": "list",
+          "cachedResultName": "Content Creation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Campaign": "={{ $('Get row(s) in sheet').item.json.Campaign }}",
+            "ContentSubject": "={{ $('Get row(s) in sheet').item.json.ContentSubject }}",
+            "TargetAudience": "={{ $('Get row(s) in sheet').item.json.TargetAudience }}",
+            "LinkedIn": "={{ $('LinkedIn').item.json.output }}",
+            "X": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "Campaign"
+          ],
+          "schema": [
+            {
+              "id": "Campaign",
+              "displayName": "Campaign",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ContentSubject",
+              "displayName": "ContentSubject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TargetAudience",
+              "displayName": "TargetAudience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "displayName": "LinkedIn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "X",
+              "displayName": "X",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Blog ",
+              "displayName": "Blog ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2992,
+        80
+      ],
+      "id": "897676b6-608d-4b54-a5a8-67f822b9446c",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kHienqhtZSfAflKw",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"api_key\": \"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\",\n  \"query\": \"Always on AI Wearables for Productivity\",\n  \"search_depth\": \"basic\",\n  \"include_answer\":true,\n  \"topic\":\"news\",\n  \"include_raw_content\":true,\n  \"max_results\": 1\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -496,
+        -448
+      ],
+      "id": "35f31fb2-de3e-4a23-b149-8dd3f53207d6",
+      "name": "HTTPs"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        -240
+      ],
+      "id": "ed9770f2-24a9-4d21-a0e5-4029c9e5e26d",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        64
+      ],
+      "id": "442c9272-2f30-4653-be15-4ac54f8a4e82",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Article Title:\n {{ $json.results[0].title }}\n\nArticle Content:\n{{ $json.results[0].content }}\n\n\n",
+        "options": {
+          "systemMessage": "System Role:\nYou are given an Article Title and Article Content. Your task is to analyze them and produce a structured JSON output containing the following fields:\n\nContentSubject – A short, summary for the campaign based on the article’s main theme in 6 words.\n\nDo not include any additional commentary or explanations in your output — only return the JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        -96
+      ],
+      "id": "a7216169-ddf7-4eb5-a4c6-6a2729f0f066",
+      "name": "Content Subject"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        -432
+      ],
+      "id": "28e5c0ad-5f62-4fb3-a8ce-6a264c3eb384",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Article Title:\n{{ $json.results[0].title }}\n\nArticle Content:\n{{ $json.results[0].content }}\n",
+        "options": {
+          "systemMessage": "System Role:\nYou are given an Article Title and Article Content. Your task is to analyze them and produce a JSON output containing the following field:\n\nTargetAudience – A short, comma-separated list of exactly 2–3 groups of people who would benefit most or be most interested in the article content.\n\nExpected Output Format (JSON):\n{\n  \"TargetAudience\": \"Group1, Group2, Group3\"\n}\n\nDo not include any commentary, explanations, or extra text — only return the JSON.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -624
+      ],
+      "id": "56a80747-5bd2-4ceb-8c24-6662f0a412f1",
+      "name": "Target Audience"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Article Title:\n {{ $json.results[0].title }}\n\nArticle Content:\n{{ $json.results[0].content }}\n\n\n",
+        "options": {
+          "systemMessage": "System Role:\nYou are given an Article Title and Article Content. Your task is to analyze them and produce a structured JSON output containing the following fields:\n\nCampaignName – A short, catchy name for the campaign based on the article’s main theme.\n\nDo not include any additional commentary or explanations in your output — only return the JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -320
+      ],
+      "id": "440161c3-1667-4b6e-a302-e39e62c221fa",
+      "name": "CampaginName"
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "numberInputs": 3,
+        "query": "SELECT *\nFROM input1\nLEFT JOIN input2 \n    ON input1.name = input2.id\nLEFT JOIN input3\n    ON input1.name = input3.id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "469917c1-ef4d-484a-97d1-fb46cbcd72f7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ac69c6e-c38d-4575-bbff-f07832e24d40",
+              "name": "TargetAudience",
+              "value": "={{ (typeof $json.output === 'string' ? JSON.parse($json.output) : $json.output).TargetAudience }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        -640
+      ],
+      "id": "56f6fb5f-20ca-4561-809e-50c9bc268816",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ac69c6e-c38d-4575-bbff-f07832e24d40",
+              "name": "Campaign",
+              "value": "={{ (typeof $json.output === 'string' ? JSON.parse($json.output) : $json.output).CampaignName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        -384
+      ],
+      "id": "0062e4e7-f703-403b-846c-fbfdb1b27e58",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ac69c6e-c38d-4575-bbff-f07832e24d40",
+              "name": "ContentSubject",
+              "value": "={{ (typeof $json.output === 'string' ? JSON.parse($json.output) : $json.output).ContentSubject }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        -128
+      ],
+      "id": "9491e3d7-0f77-4fe4-9d1b-11faffb68d32",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80",
+          "mode": "list",
+          "cachedResultName": "Content Creation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Campaign": "={{ $json.Campaign }}",
+            "ContentSubject": "={{ $json.ContentSubject }}",
+            "TargetAudience": "={{ $json.TargetAudience }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Campaign",
+              "displayName": "Campaign",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ContentSubject",
+              "displayName": "ContentSubject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TargetAudience",
+              "displayName": "TargetAudience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "displayName": "LinkedIn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "X",
+              "displayName": "X",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1136,
+        -384
+      ],
+      "id": "1f015525-335c-434b-aefd-672f2e5bd02c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kHienqhtZSfAflKw",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.getbuddi.ai/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -624,
+        368
+      ],
+      "id": "592d9e8c-26b2-4a03-90f0-fdf688ee202a",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "options": {
+          "systemMessage": "You are a HTML and CSS expert, where you can structure content from a website and give the output giving the summary of the website in multiple paragraphs\n\nOutput - \nsummary of the data page given in the input"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -416,
+        368
+      ],
+      "id": "be1513da-9b8b-470a-b721-d23370b89e4b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        576
+      ],
+      "id": "71b1c088-5d91-4341-affc-1fd4425b4a3e",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Update row in sheet').item.json.X }}",
+        "additionalFields": {
+          "attachments": "={{ $json.body.data.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        720
+      ],
+      "id": "93d0e291-3f44-4afc-8f64-d44d7dfac1d6",
+      "name": "Create Tweet",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "NSpIPcWtcdKL5RjI",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/imagen-3.0-generate-002",
+          "mode": "list",
+          "cachedResultName": "models/imagen-3.0-generate-002"
+        },
+        "prompt": "=Generate a no-word graphic that would pair with the following question {{ $json.output }}\n- Only include concrete imagery such as company logos, products, or people when they are mentioned in the input\n- Do not include text in the graphic",
+        "options": {
+          "binaryPropertyOutput": "data-image"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2384,
+        752
+      ],
+      "id": "41bddf82-22c8-497d-8ea8-8db554732617",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "U2DgSdygVBLupPts",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twitter.com/2/media/upload",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "twitterOAuth2Api",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "media",
+              "inputDataFieldName": "data-image"
+            },
+            {
+              "name": "media_category",
+              "value": "tweet_image"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2624,
+        736
+      ],
+      "id": "55b1a4bb-2297-4d51-8c38-2909200e79e2",
+      "name": "HTTP Request3",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "NSpIPcWtcdKL5RjI",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.X }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant that summarizes the text specified in \"output\" to create a single overarching question that the text answers. Follow these steps when generating this question:\n1. Create 3-5 one sentence summaries of the text\n2. Rephrase each of the summaries into a question\n3. Evaluate which question best represents the text's main point.\n4. Output only the top question"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        784
+      ],
+      "id": "48cdbebe-fee1-48d0-8a71-5a0bd9f4a557",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1872,
+        992
+      ],
+      "id": "dd541b21-1a91-4e80-8f6a-af0490aa2c5d",
+      "name": "OpenAI Chat Model6",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80",
+          "mode": "list",
+          "cachedResultName": "Content Creation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17XXhaSVUn8-WaqC947HNxomoHm5GIfjxaWkv_dSqd80/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "SUCCESSFUL",
+            "X": "={{ $('Update row in sheet').item.json.X }}"
+          },
+          "matchingColumns": [
+            "X"
+          ],
+          "schema": [
+            {
+              "id": "Campaign",
+              "displayName": "Campaign",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ContentSubject",
+              "displayName": "ContentSubject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TargetAudience",
+              "displayName": "TargetAudience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "displayName": "LinkedIn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "X",
+              "displayName": "X",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3056,
+        720
+      ],
+      "id": "30e2befe-a553-4cc5-a793-6cff352fcae1",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kHienqhtZSfAflKw",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twitter.com/2/media/upload",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "twitterOAuth2Api",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "media",
+              "inputDataFieldName": "data-image"
+            },
+            {
+              "name": "media_category",
+              "value": "tweet_image"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2624,
+        944
+      ],
+      "id": "c10ed78c-c5ee-456b-a452-8b620fb033e4",
+      "name": "HTTP Request4",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "P0Uz3x9bPof4QRz2",
+          "name": "X account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Update row in sheet').item.json.X }}",
+        "additionalFields": {
+          "attachments": "={{ $json.body.data.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        944
+      ],
+      "id": "ceeb3055-6bf2-42de-a322-875f27fd6d2f",
+      "name": "Create Tweet1",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "P0Uz3x9bPof4QRz2",
+          "name": "X account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Go 2 Market",
+        "formDescription": "Give us a product photo, title, and description, and we'll get back to you with professional marketing materials. ",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Product Photo",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product Title",
+              "placeholder": "Toothpaste",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product Description",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "name@example.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -768,
+        928
+      ],
+      "id": "1fc53c54-5584-4578-936b-44ca7a57f18f",
+      "name": "On form submission",
+      "webhookId": "af13c24d-f792-46fb-ab9f-e1660bb6f068"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "Product_Photo",
+        "name": "={{ $json['Product Title'] }} (Original)",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "16KxugF6KrwrGjkVGrgAsutMAZlU51jM8",
+          "mode": "list",
+          "cachedResultName": "Pipeline and Automations",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/16KxugF6KrwrGjkVGrgAsutMAZlU51jM8"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -528,
+        928
+      ],
+      "id": "e9e68b1c-eb27-464d-af60-6b482711e474",
+      "name": "Upload Photo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qeSUONvbDFz2Ehs7",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Upload Photo').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        48,
+        928
+      ],
+      "id": "bb3e590b-a185-402c-a1b0-9949b72b6750",
+      "name": "Download File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qeSUONvbDFz2Ehs7",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/edits",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $('Product Photography Agent').item.json.output }}"
+            },
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        928
+      ],
+      "id": "0484066a-2b48-4590-8b27-00c10bfb0fa3",
+      "name": "Create Image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OKcr58oHLVqWvDrx",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        928
+      ],
+      "id": "0e15cf2a-78ec-44bf-aea6-810d545c75b5",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.imgbb.com/1/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -800,
+        1232
+      ],
+      "id": "f3e91989-ab49-4166-a74a-89ceaf1c4354",
+      "name": "Get URL",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "DVZQLaLg0un34nds",
+          "name": "Query Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dev.runwayml.com/v1/image_to_video",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Runway-Version",
+              "value": "2024-11-06"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "promptImage",
+              "value": "={{ $json.data.url }}"
+            },
+            {
+              "name": "model",
+              "value": "gen4_turbo"
+            },
+            {
+              "name": "promptText",
+              "value": "=Create a highly professional marketing video from the provided product photo. Simulate a smooth, realistic 3D turntable rotation around the product, as if the product is slowly rotating in place. The movement should be continuous, slow, and elegant — no sudden pans, jerks, or camera cuts. Always keep the entire product fully in frame, centered, and clearly visible at all times. Avoid zooming in or cropping. Focus on a premium, clean, and modern aesthetic that feels suitable for commercial marketing materials. No flashy effects, transitions, or overlays — only a subtle, realistic 3D rotation that highlights the product in the most polished way possible."
+            },
+            {
+              "name": "duration",
+              "value": "10"
+            },
+            {
+              "name": "ratio",
+              "value": "960:960"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -592,
+        1232
+      ],
+      "id": "e485a253-7150-429f-aed5-a194b0717a0e",
+      "name": "Generate Video",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "u4wDtIN82WEvAks0",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b45aec04-a6dc-4118-8318-42f40f903935",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "RUNNING",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -128,
+        1232
+      ],
+      "id": "424fe203-6314-4c37-b9b8-68070d1e7686",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        1232
+      ],
+      "id": "4a2c662c-2769-42fd-b036-5081c05ad4d3",
+      "name": "5 Secs",
+      "webhookId": "dd3eae86-f75c-41fe-a48c-58788f1ee73d"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dev.runwayml.com/v1/tasks/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Runway-Version",
+              "value": "2024-11-06"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -272,
+        1232
+      ],
+      "id": "36401541-06bd-495d-970b-c125b585080c",
+      "name": "Get Video",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "u4wDtIN82WEvAks0",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        1232
+      ],
+      "id": "ae9045cb-e99d-445b-9455-b482e9b0c62a",
+      "name": "60 Seconds",
+      "webhookId": "ae4ab48f-6ebe-4768-88f0-743989181262"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "=Marketing Materials: {{ $('On form submission').item.json['Product Title'] }}",
+        "emailType": "text",
+        "message": "=Hey!\n\nHere is your photo: {{ $('Get URL').item.json.data.url }}\n\nHere is your video: {{ $json.output[0] }}\n\nCheers!",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        1232
+      ],
+      "id": "4730be3d-6220-4979-a74c-a90c64fce9e8",
+      "name": "Send Finished Products",
+      "webhookId": "779028aa-2c69-4e60-8d40-ff55f32042bc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "V9YPXj6aSLHAUqbU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Product: {{ $('On form submission').item.json['Product Title'] }}\nDescription: {{ $('On form submission').item.json['Product Description'] }}",
+        "options": {
+          "systemMessage": "=# Overview\nYou are a world-class marketing strategist and an expert text-to-image prompt engineer specializing in creating hyper-realistic, high-quality product photography prompts for AI image generation models.\n\n## Your Objective:\nWhen given a product description, your task is to craft a detailed, professional prompt that results in a hyper-realistic, clean, and visually stunning product image suitable for marketing material, advertising campaigns, or e-commerce platforms.\n\n## Key Requirements:\n- Focus on hyper-realistic, professional studio photography.\n- Maintain a clean, minimalistic, and elegant visual style.\n- Highlight the product as the main subject with sharp detail and perfect lighting.\n- Use backgrounds that complement but do not overpower the product (e.g., soft gradient, light-colored, or pure white).\n- Include professional lighting details such as \"softbox lighting\", \"studio lights\", or \"natural soft shadows\".\n- Emphasize realism, texture, and color accuracy.\n- Maintain a high-end, premium look and feel.\n- If applicable, suggest a subtle setting that enhances the product's story (e.g., a luxury kitchen counter for a high-end blender).\n\n## Output Format:\n- Write a single text-to-image prompt optimized for a professional AI image model.\n- Be direct and descriptive without using excessive words.\n- Avoid unnecessary repetition or adjectives that do not enhance the image quality.\n- Ensure the prompt is complete and ready for direct input into an AI model.\n\n## Tone:\nProfessional, precise, clean, and optimized for maximum realism and marketing impact.\n\n# Example Input:\n\"A premium wireless Bluetooth speaker in matte black, cylindrical shape, modern design.\"\n\n# Example Output:\n\"Hyper-realistic product photo of a premium matte black wireless Bluetooth speaker with a cylindrical modern design, centered on a clean white studio background, softbox lighting with natural shadows, sharp focus on texture and material, minimalistic, professional advertising shot.\"\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -320,
+        896
+      ],
+      "id": "6a3ee984-6549-4ca3-843c-525410c5c374",
+      "name": "Product Photography Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        1040
+      ],
+      "id": "57b822c3-64d2-40a7-bac2-bc5f1d0c98c5",
+      "name": "OpenAI Chat Model7",
+      "credentials": {
+        "openAiApi": {
+          "id": "dxK6a4GLh6UE1SGr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Account Orchastration Team\n\n### ideas is to make an automation to heat up the engagements on the accounts\n\nwe can manage 20-30 different account. to egnage consistently and then use them for promotion and get into SM Algos\n",
+        "height": 368,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1472,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "cf1d20b1-210d-4a9a-8fd9-9a6e8332ab08",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Product Photography team\n### idea is to input ref. image and get the product video out there and then post it on SM over approvals\n\nwe can manage 20-30 different account. to egnage consistently and then use them for promotion and get into SM Algos\n",
+        "height": 368,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1360,
+        912
+      ],
+      "typeVersion": 1,
+      "id": "4326b1c1-ead5-4e50-b2ff-a99535c3012a",
+      "name": "Sticky Note1"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTPs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Twitter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LinkedIn",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Twitter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTPs": {
+      "main": [
+        [
+          {
+            "node": "CampaginName",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Content Subject",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Target Audience",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CampaginName",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Subject",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Subject": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Target Audience",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Target Audience": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CampaginName": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tweet": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Upload Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Photo": {
+      "main": [
+        [
+          {
+            "node": "Product Photography Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Create Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Image": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Get URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get URL": {
+      "main": [
+        [
+          {
+            "node": "Generate Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video": {
+      "main": [
+        [
+          {
+            "node": "60 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "5 Secs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Finished Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 Secs": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Video": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "60 Seconds": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product Photography Agent": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Product Photography Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16909c6f61abb7f8bedd0d292055fb1ce6f1d414b0386f3fa31518efc40b3c94"
+  }
+}
